@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <string.h>
 
-#define PORT 2828
+#define PORT 3737  // Changed port to match the server
 
 #define MIN_ARGS 2
 #define MAX_ARGS 2
@@ -31,10 +32,18 @@ void send_request(int fd)
    char *line = NULL;
    size_t size;
    ssize_t num;
+   char buffer[1024];
 
    while ((num = getline(&line, &size, stdin)) >= 0)
    {
-      write(fd, line, num);
+      write(fd, line, num);  // Send input to server
+
+      ssize_t received = read(fd, buffer, sizeof(buffer) - 1);
+      if (received > 0)
+      {
+         buffer[received] = '\0';  // Null-terminate the received data
+         printf("Echo from server: %s", buffer);
+      }
    }
 
    free(line);
@@ -49,13 +58,12 @@ int connect_to_server(struct hostent *host_entry)
    {
       return -1;
    }
-   
+
    their_addr.sin_family = AF_INET;
    their_addr.sin_port = htons(PORT);
    their_addr.sin_addr = *((struct in_addr *)host_entry->h_addr);
 
-   if (connect(fd, (struct sockaddr *)&their_addr,
-      sizeof(struct sockaddr)) == -1)
+   if (connect(fd, (struct sockaddr *)&their_addr, sizeof(struct sockaddr)) == -1)
    {
       close(fd);
       perror(0);

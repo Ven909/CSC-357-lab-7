@@ -3,8 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
-#define PORT 2828
+#define PORT 3737  // Changed port from 2828 to 3737
 
 void handle_request(int nfd)
 {
@@ -22,7 +23,7 @@ void handle_request(int nfd)
 
    while ((num = getline(&line, &size, network)) >= 0)
    {
-      printf("%s", line);
+      write(nfd, line, num);  // Send data back to the client
    }
 
    free(line);
@@ -39,6 +40,7 @@ void run_service(int fd)
          printf("Connection established\n");
          handle_request(nfd);
          printf("Connection closed\n");
+         close(nfd);
       }
    }
 }
